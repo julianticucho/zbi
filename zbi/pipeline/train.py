@@ -445,11 +445,13 @@ def train_ensemble_kl(
     os.makedirs(f"{run_dir}/models", exist_ok=True)
     hp_keys = ["batch_size", "lr", "max_epochs", "stop_after_epochs"]
     maf_config = config.get("maf", DEFAULT_MAF)
+    ckpt_names = []
     for i in range(n_members):
         if best_states[i] is not None:
             models[i].load_state_dict(best_states[i])
         suffix = f"_{tag}{i+1}" if tag else f"_ens{i+1}"
-        ckpt_name = f"round_00000_{n_sims}{suffix}.pt"
+        ckpt_name = f"round_{round:05d}_{n_sims}{suffix}.pt"
+        ckpt_names.append(ckpt_name)
         _save_ensemble_checkpoint(
             f"{run_dir}/models/{ckpt_name}", models[i], config, n_sims, tag,
         )
@@ -468,6 +470,6 @@ def train_ensemble_kl(
 
         print(f"checkpoint saved: models/{ckpt_name}")
 
-    history = {"epochs": epochs_history, "max_kl": max_kl_history}
+    history = {"epochs": epochs_history, "max_kl": max_kl_history, "checkpoints": ckpt_names}
 
     return models, history
