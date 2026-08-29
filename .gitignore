@@ -49,4 +49,5 @@ latex/
 chains/
 bib/
 .pytest_cache/
+plots/
 
