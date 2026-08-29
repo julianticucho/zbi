@@ -1,0 +1,16 @@
+cobaya==3.6
+ipykernel==7.1.0
+matplotlib==3.10.8
+numpy==2.2.6
+seaborn==0.13.2
+tqdm==4.67.1
+sbi==0.25.0
+pandas==2.3.3
+astropy==6.1.7
+camb==1.5.9
+healpy==1.19.0
+pysm3==3.4.4
+scikit-learn==1.7.2
+SciencePlots==2.2.0
+
+
