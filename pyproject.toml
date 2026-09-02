@@ -21,8 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-cmb = ["cobaya", "camb", "healpy", "pysm3", "astropy"]
-dev = ["ipykernel", "pytest"]
+dev = ["pytest", "joblib"]
 
 [tool.setuptools.packages.find]
 include = ["zbi*"]
