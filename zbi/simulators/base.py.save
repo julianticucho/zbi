@@ -1,0 +1,89 @@
+from typing import Optional
+import os
+import resource
+import time
+import multiprocessing as mp
+import numpy as np
+import torch
+from tqdm import tqdm
+
+try:
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    if soft < 4096:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (min(4096, hard), hard))
+except (OSError, ValueError):
+    pass
+
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+_sim_worker = None
+_counter = None
+
+def _init_pool(simulator, counter):
+    global _sim_worker, _counter
+    _sim_worker = simulator
+    _counter = counter
+
+def _run_batch(args):
+    global _sim_worker, _counter
+    batch_np, seed = args
+    batch_t = torch.from_numpy(batch_np)
+    xs = []
+    for i in range(len(batch_t)):
+        s = int(seed) + i
+        xs.append(_sim_worker.simulate(batch_t[i], s))
+        with _counter.get_lock():
+            _counter.value += 1
+    return torch.stack(xs)
+
+class Simulator:
+    def simulate(self, theta: torch.Tensor, seed: Optional[int] = None) -> torch.Tensor:
+        raise NotImplementedError
+
+    def __call__(
+        self,
+        theta: torch.Tensor,
+        show_progress: bool = True,
+        n_jobs: int = 1,
+    ) -> torch.Tensor:
+        if theta.ndim == 1:
+        return self.simulate(theta)
+        
+        batch = theta.shape[0]
+        if batch == 0:
+            return torch.empty(0)
+
+        if n_jobs <= 1:
+            xs = []
+            iterator = tqdm(range(batch), desc="Simulating") if show_progress else range(batch)
+            for _ in iterator:
+                seed = int(torch.randint(0, 2**31, (1,)).item())
+                xs.append(self.simulate(theta[_], seed))
+            return torch.stack(xs)
+
+        n_workers = min(n_jobs, batch)
+        n_chunks = min(batch, n_workers * 2)
+        batches_np = np.array_split(theta.cpu().numpy(), n_chunks, axis=0)
+        batch_seeds = np.random.randint(0, 1_000_000, size=len(batches_np)).tolist()
+        args_list = list(zip(batches_np, batch_seeds))
+
+        ctx = mp.get_context("spawn")
+        counter = ctx.Value("i", 0)
+        with ctx.Pool(n_workers, initializer=_init_pool, initargs=(self, counter)) as pool:
+            result_async = pool.map_async(_run_batch, args_list)
+            if show_progress:
+                with tqdm(total=batch, desc="Simulating") as pbar:
+                    while not result_async.ready():
+                        with counter.get_lock():
+                            pbar.n = counter.value
+                        pbar.refresh()
+                        time.sleep(0.1)
+                    pbar.n = batch
+                    pbar.refresh()
+                results = result_async.get()
+            else:
+                results = pool.map(_run_batch, args_list)
+
+        return torch.cat(results)
+
