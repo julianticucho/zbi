@@ -62,9 +62,3 @@ zbi/
 - **Proposal history**: Save proposals per round for reproducibility
 - **ZarrStore**: Efficient data storage with append/clear operations
 
-## What Needs To Be Done
-
-- [ ] **Update `requirements.txt`**: Dependencies may be outdated or incomplete
-- [ ] **Update `tutorials/`**: Notebooks need to reflect current API changes (renamed functions, new features)
-- [ ] **Add docstrings**: Most functions lack documentation
-- [ ] **CI/CD**: Set up GitHub Actions for automated testing
