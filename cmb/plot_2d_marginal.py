@@ -13,7 +13,6 @@ plt.style.use(["science", "bright"])
 plt.rcParams["figure.dpi"] = 300
 plt.rcParams["axes.labelsize"] = 16
 
-# --- configuración ---
 x_param = "omch2"
 y_param = "ns"
 
@@ -21,7 +20,6 @@ run_dir = "runs/planck_lite_r2"
 n_samples = 10_000
 n_rows = 3
 n_cols = 3
-# ---------------------
 
 ALL_PARAM_NAMES = ["ombh2", "omch2", "theta_mc", "tau", "logA", "ns"]
 ALL_PARAM_LABELS = [
