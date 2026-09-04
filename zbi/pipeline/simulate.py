@@ -3,11 +3,10 @@ import torch
 from torch.distributions import Uniform
 from zbi.data.zarr_store import ZarrStore
 from zbi.utils.truncation import TruncatedBoxPrior
-from zbi.pipeline._resolve import resolve_class, build_prior_from_meta
+from zbi.pipeline._resolve import resolve_class, resolve_prior
 
 
-def simulate_round(
-    round_id: int,
+def _simulate_round(
     n_sims: int,
     simulator,
     proposal,
@@ -19,11 +18,6 @@ def simulate_round(
     offset = zarr_store.num_filled
     zarr_store.append(theta, x)
     return offset
-
-
-def simulate_obs(simulator, theta_true: tuple, seed: int = 42) -> torch.Tensor:
-    theta_o = torch.tensor(theta_true)
-    return simulator.simulate(theta_o, seed=seed).unsqueeze(0)
 
 
 def simulate(
@@ -47,7 +41,7 @@ def simulate(
         proposal_path = f"{run_dir}/proposal.json"
         with open(proposal_path) as f:
             p = json.load(f)
-        original = build_prior_from_meta(p["prior_meta"])
+        original = resolve_prior(p["prior_meta"])
         bounds = torch.tensor([p["bounds"]["low"], p["bounds"]["high"]])
         proposal = TruncatedBoxPrior(original, bounds)
 
@@ -57,7 +51,7 @@ def simulate(
 
     if seed is not None:
         torch.manual_seed(seed)
-    offset = simulate_round(round, n_sims, simulator, proposal, zarr_store, n_jobs=n_jobs)
+    offset = _simulate_round(n_sims, simulator, proposal, zarr_store, n_jobs=n_jobs)
 
     meta_path = f"{run_dir}/sim_round_{round}.json"
     if os.path.exists(meta_path):
@@ -106,3 +100,8 @@ def delete_last_round(run_dir: str) -> None:
         os.remove(proposal_file)
 
     print(f"Deleted round {round_id}: cleared {n_sims} sims at offset={offset}")
+
+
+def simulate_obs(simulator, theta_true: tuple, seed: int = 42) -> torch.Tensor:
+    theta_o = torch.tensor(theta_true)
+    return simulator.simulate(theta_o, seed=seed).unsqueeze(0)

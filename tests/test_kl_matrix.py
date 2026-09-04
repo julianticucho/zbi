@@ -9,7 +9,8 @@ import torch
 from torch import nn
 from torch.distributions import MultivariateNormal, Uniform
 
-from zbi.utils.plotting import kl_matrix, plot_kl_matrix
+from zbi.inference import kl_matrix
+from zbi.utils.plotting import plot_kl_matrix
 from zbi.inference.posterior import Posterior
 
 

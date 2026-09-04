@@ -2,26 +2,16 @@ import json, os
 import torch
 from torch.distributions import Uniform
 
-from zbi.utils.checkpoint import load_checkpoint, load_maf_from_checkpoint
+from zbi.utils.checkpoint import load_checkpoint
 from zbi.utils.truncation import compute_bounding_box, TruncatedBoxPrior
-from zbi.pipeline._resolve import resolve_class, build_prior_from_meta
+from zbi.pipeline._resolve import resolve_prior
+from zbi.pipeline.checkpoints import _load_maf_from_run
 from zbi.inference.posterior import Posterior
-
-
-def _load_model(run_dir, checkpoint, device):
-    ckpt = load_checkpoint(f"{run_dir}/models/{checkpoint}")
-    emb_config = ckpt.get("embedding_net_config",
-        {"class": "EmbeddingNet", "dim_in": 100, "dim_out": 5})
-    emb_class = resolve_class(emb_config["class"])
-    emb_kwargs = {k: v for k, v in emb_config.items() if k != "class"}
-    embedding_net = emb_class(**emb_kwargs)
-    maf = load_maf_from_checkpoint(ckpt, embedding_net).to(device)
-    return maf, ckpt
 
 
 def _sample_from_model(run_dir, checkpoint, original_prior, interest_dims,
                        x_o, n_samples, batch_size, device):
-    maf, ckpt = _load_model(run_dir, checkpoint, device)
+    maf, ckpt = _load_maf_from_run(run_dir, checkpoint, device)
 
     if interest_dims:
         marginal_prior = Uniform(
@@ -57,7 +47,7 @@ def update_proposal(
 
     first_ckpt = load_checkpoint(f"{run_dir}/models/{checkpoints[0]}")
     interest_dims = first_ckpt.get("config", {}).get("interest_dims")
-    original_prior = build_prior_from_meta(first_ckpt["prior_meta"])
+    original_prior = resolve_prior(first_ckpt["prior_meta"])
 
     x_o = torch.load(f"{run_dir}/x_o.pt", weights_only=True).to(device)
 
