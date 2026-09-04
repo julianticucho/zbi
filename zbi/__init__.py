@@ -11,8 +11,8 @@ from zbi.utils import (
 from zbi.neural_nets import build_maf_estimator
 from zbi.pipeline import (
     init, simulate, train, sample_model,
-    run_round, simulate_obs, update_proposal,
-    update_embedding, update_store, train_ensemble_kl, update_maf,
+    simulate_obs, update_proposal,
+    update_embedding, update_store, update_maf,
     delete_last_round
 )
 
