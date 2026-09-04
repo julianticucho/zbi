@@ -1,13 +1,6 @@
-from __future__ import annotations
-
 import os
-
-import matplotlib.pyplot as plt
 import numpy as np
-
 from getdist import loadMCSamples
-from zbi.utils.plotting import plot_ppc
-
 
 def load_chain(chain_dir: str) -> np.ndarray:
     s = loadMCSamples(os.path.join(chain_dir, "chain"))
