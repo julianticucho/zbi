@@ -156,8 +156,7 @@ def train(
         config["dim_interest"] = len(interest_dims)
 
     zarr_store = ZarrStore(f"{run_dir}/data")
-    x_o = torch.load(f"{run_dir}/x_o.pt", weights_only=True).to(device)
-
+    
     original_prior = resolve_prior(config["prior_meta"])
     proposal = original_prior
 
