@@ -53,6 +53,7 @@ def init(
         dim_theta=dim_theta, dim_x=dim_x,
     )
     torch.save(x_o, f"{run_dir}/x_o.pt")
+    print(f"Experiment initialized: {run_dir}")
 
 
 def update_store(run_dir: str, new_N: int):
