@@ -6,7 +6,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import scienceplots
 from matplotlib import colors as mcolors
-from getdist import MCSamples, plots
+from getdist import MCSamples, chains, plots
 
 plt.style.use(['science', 'bright'])
 plt.rcParams['figure.dpi'] = 300
@@ -38,20 +38,25 @@ def plot_ppc(
         param_labels = [name.replace("_", "\\_") for name in param_names]
 
     gdist_samples = []
-    for i, sample in enumerate(all_samples):
-        label = (
-            sample_labels[i]
-            if sample_labels and i < len(sample_labels)
-            else f"Run {i+1}"
-        )
-        gdist = MCSamples(
-            samples=np.array(sample, copy=True),
-            names=param_names,
-            labels=param_labels,
-            label=label,
-        )
-        gdist.fine_bins = gdist.fine_bins_2D = gdist_fine_bins
-        gdist_samples.append(gdist)
+    _orig_print_load_details = chains.print_load_details
+    chains.print_load_details = False
+    try:
+        for i, sample in enumerate(all_samples):
+            label = (
+                sample_labels[i]
+                if sample_labels and i < len(sample_labels)
+                else f"Run {i+1}"
+            )
+            gdist = MCSamples(
+                samples=np.array(sample, copy=True),
+                names=param_names,
+                labels=param_labels,
+                label=label,
+            )
+            gdist.fine_bins = gdist.fine_bins_2D = gdist_fine_bins
+            gdist_samples.append(gdist)
+    finally:
+        chains.print_load_details = _orig_print_load_details
 
     g = plots.get_subplot_plotter()
     g.settings.scaling_factor = gdist_scaling_factor
