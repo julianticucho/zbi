@@ -25,4 +25,4 @@ cmb = ["cobaya", "camb", "healpy", "pysm3", "astropy"]
 dev = ["ipykernel", "pytest"]
 
 [tool.setuptools.packages.find]
-include = ["zbi*"]
+include = ["zbi*", "cmb"]
